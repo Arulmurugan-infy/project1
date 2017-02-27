@@ -1,0 +1,75 @@
+*** Important note- SimpleFormController is depricated in spring 4. What to do??
+
+For form handling we have 
+one inputform jsp - CustomerForm.jsp
+one controller class - com.arul.customerFormController
+one Success jsp - CustomerSuccess
+
+The Controller class should extends SimpleFormController abstract class
+and should override onSubmit()
+                    formBackingObject()
+                    referenceData()
+and the SimpleFormController having three properties
+                    formView
+                    successView
+                    validator
+in dispatcher-servlet.xml we should give the value for these properties
+                    "<bean class="com.arul.CustomerFormController">
+                    <property name="formView" value="CustomerForm" />
+                    <property name="successView" value="CustomerSuccess" />
+                    <property name="validator">
+                        <bean class="org.test.CustomerValidator" />
+                    </property>
+                </bean>"
+
+Here we used ControllerClassNameHandlerMapping
+so while we hitting customerForm.htm it will call customerFormController
+it will execute the formView jsp(CustomerForm.jsp) and formBackingObject(), referenceData() methods
+(This is called get request)
+
+purpose of these methods,
+formBackingObject() - Here we should create model class (Customer.java) object and we can assign the 
+default form properties
+referenceData() - Inside this we should have values for each input field to supply the input for form
+put all the values inside a map and return that map
+
+after clicking submit button it will call onSubmit(Object command) method
+
+Using this command object we can get the model class object, (note -The model object now contains 
+all the form values)
+inside that method we will return ModelAndView object with (viewName, ModelClassName, modelObject)
+Here the model class name can be anything, it is only used to retrieve the form values in successView jsp
+for example if the name is cc then in successView.jsp we can get like ${cc.userName}
+
+If the onSubmit() method was overrided and return modelAndView object then that view will be 
+called by using InternalViewResolver
+If the onSubmit() is not there by default it will call the success view jsp which 
+is mentioned in successView property.
+
+(Here we have 3 onSubmit()
+1.onSubmit(HttpServletRequest request, HttpServletResponse response, Object command, BindException errors)
+2.onSubmit(Object command, BindException errors)
+3.onSubmit(Object command)
+The 1st method will return modelandview obj by calling 2nd one, the 2nd one will call third one to get mav obj.
+If we override the 3rd method in our controller and returned mav object means it will call the view jsp 
+as we returned,
+if we mav is null (we didn't override 3rd method then by default it will execute the view which is 
+mentioned in dispatcher-servler.jsp under successView property.
+if the successView property is not set in ds.xml then it'll throw an exception SucessView isn't set)
+Validator - study..
+
+--FINISH---
+CustomerForm.jsp:
+----------------
+Here we do not write the form as normal html form
+we should use spring's form tag library
+<%@ taglib prefix="F" uri="http://www.springframework.org/tags/form"%>
+Example jsp ,
+<F:form method="post commandName="customerForm">
+    <F:errors path="*" cssClass="errorBlock" element="div"/>
+    <F:input path="userName"/>
+    <F:errors path="userName" cssClass="error"/>
+</F:form>
+here the path is the name of property in model class. While loading this jsp page these tags will be converted to normal
+html file using form tag library.
+What is use of this commandName here?-analyze 
